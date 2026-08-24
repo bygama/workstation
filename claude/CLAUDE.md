@@ -4,37 +4,36 @@
 
 ## Language
 
-- Reply in each prompt's language: Spanish → rioplatense Spanish,
-  English → English. Communication only — never the artifact rules.
-- All technical artifacts in English: code, comments, docs, commits,
-  branches, PR titles/bodies, context files.
-- User-facing product content (site copy, UI text, SEO metadata) in Spanish, unless
-  the project's context says otherwise.
+- Reply in each prompt's language: Spanish → rioplatense Spanish, English → English. Communication
+  only — never the artifact rules.
+- All technical artifacts in English: code, comments, docs, commits, branches, PR titles/bodies,
+  context files.
+- User-facing product content (site copy, UI text, SEO metadata) in Spanish, unless the project's
+  context says otherwise.
 
 ## Safety
 
-- Never expose or commit credentials, tokens, private keys, or populated
-  `.env` files.
+- Never expose or commit credentials, tokens, private keys, or populated `.env` files.
 - Resolve exact targets before destructive filesystem or git operations.
 - Never claim success without running the relevant verification.
 
 ## Working style
 
-- Make the smallest coherent change — smallest in scope, not provisional:
-  no speculative generality, no stopgaps meant to be replaced later.
+- A repo's `CONTRIBUTING.md` binds: read it before the first commit there, run its gates before a PR
+  with their output shown, name any that cannot run, and let it win over this file.
+- Make the smallest coherent change — smallest in scope, not provisional: no speculative generality,
+  no stopgaps meant to be replaced later.
 - Prefer evidence (code, command output, primary docs) over assumptions.
 - Preserve unrelated changes in a dirty worktree.
-- Project specifics live in each repo's CLAUDE.md; procedural workflows in
-  skills; session-learned facts in auto-memory — never in this file.
+- Project specifics live in each repo's CLAUDE.md; procedural workflows in skills; session-learned
+  facts in auto-memory — never in this file.
 
 ## Orca agent spawns
 
-- A spawn inherits THIS session's account: `--command "pegasuz"` when
-  `CLAUDE_CONFIG_DIR` points at `.claude-pegasuz`, else `--command
-  "claude"`; children detect their own env and repeat the rule.
-- Never start bare `claude.exe` from an Orca terminal — it resolves to the
-  machine's ambient default (pegasuz), not to this session's account.
-- Never run a long-lived process as a background shell in an agent
-  session — blocks working→idle, dies with it. Dev servers: own Orca
-  terminal tab (`orca terminal create --command "npm run dev"`); browsers:
-  Orca's embedded one — other MCPs only for lacked capabilities, not a child.
+- A spawn inherits THIS session's account: `--command "pegasuz"` when `CLAUDE_CONFIG_DIR` points at
+  `.claude-pegasuz`, else `--command "claude"`; children detect their own env and repeat the rule.
+- Never start bare `claude.exe` from an Orca terminal — it resolves to the machine's ambient default
+  (pegasuz), not to this session's account.
+- Never run a long-lived process as a background shell in an agent session — blocks working→idle,
+  dies with it. Dev servers: own Orca terminal tab (`orca terminal create --command "npm run dev"`);
+  browsers: Orca's embedded one — other MCPs only for lacked capabilities, not a child.
