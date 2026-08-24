@@ -19,8 +19,8 @@
 
 ## Working style
 
-- A repo's `CONTRIBUTING.md` binds: read it before the first commit there, run its gates before a PR
-  with their output shown, name any that cannot run, and let it win over this file.
+- A repo's `CONTRIBUTING.md` binds and outranks this file: run every gate it names before a PR,
+  show their output, and name any that cannot run.
 - Make the smallest coherent change — smallest in scope, not provisional: no speculative generality,
   no stopgaps meant to be replaced later.
 - Prefer evidence (code, command output, primary docs) over assumptions.
