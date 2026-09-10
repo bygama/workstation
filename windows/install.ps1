@@ -149,6 +149,17 @@ function Disable-ScheduledTaskIfPresent {
     }
 }
 
+# Turn a declared exclusion key into a real path. Keys, not literals: `C:\Briar\repos` is
+# written down once, in layout\LAYOUT.md, and a second copy inside a README is a copy that
+# drifts the day a folder moves. `home:` covers the paths a vendor owns under the profile,
+# which LAYOUT.md deliberately does not describe.
+function Resolve-ExclusionPath {
+    param([Parameter(Mandatory)][string]$Key)
+    if ($Key -match '^layout:(.+)$') { return Get-LayoutPath $Matches[1] }
+    if ($Key -match '^home:(.+)$') { return Join-Path $HOME $Matches[1] }
+    throw "unknown exclusion key prefix: $Key"
+}
+
 # ================================================================ Explorer (per-user)
 Write-Step 'Explorer'
 $adv = 'HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced'
@@ -298,6 +309,62 @@ Disable-ScheduledTaskIfPresent '\Microsoft\Windows\DiskDiagnostic\' `
     'Microsoft-Windows-DiskDiagnosticDataCollector' 'disk diagnostic data collector'
 Disable-ScheduledTaskIfPresent '\Microsoft\Windows\Autochk\' `
     'Proxy' 'disk auto-check telemetry proxy'
+
+# ================================================================ Scanner exclusions
+Write-Step 'Scanner exclusions'
+Write-Host '  Defender stays on, real-time protection included. What goes is real-time' -ForegroundColor DarkGray
+Write-Host '  scanning of the development roots: an npm install writes tens of thousands of' -ForegroundColor DarkGray
+Write-Host '  short-lived files and MsMpEng reads every one. README has the list and its cost.' -ForegroundColor DarkGray
+
+if (-not (Get-Command Add-MpPreference -ErrorAction SilentlyContinue)) {
+    Write-Skip 'Microsoft Defender cmdlets are not present - nothing to exclude'
+    $already++
+}
+else {
+    # Reading the current list needs admin as much as writing it, so an unelevated run
+    # cannot tell "already excluded" from "not excluded yet". It reports the whole declared
+    # set as pending, which is the honest answer rather than a guess.
+    $excluded = if ($admin) { @((Get-MpPreference).ExclusionPath) } else { @() }
+    foreach ($key in Get-IdsFromReadme "$PSScriptRoot\README.md" @('Scanner exclusions')) {
+        $path = Resolve-ExclusionPath $key
+        $what = "scanner exclusion $path"
+
+        # A path that does not exist yet is still declared: orca\workspaces appears the
+        # first time a worktree is created, and the exclusion has to be there before it is.
+        if ($admin -and @($excluded | Where-Object { $_.TrimEnd('\') -eq $path.TrimEnd('\') })) {
+            Write-Skip "$what (already excluded)"
+            $already++
+            continue
+        }
+        if ($WhatIfOnly) {
+            Write-Host "  would add $what$(if (-not $admin) { ' [requires elevation]' })" -ForegroundColor DarkGray
+            $planned++
+            continue
+        }
+        if (-not $admin) {
+            Write-Skip "$what - needs admin"
+            $skipped++
+            $needsElevation.Add($what)
+            continue
+        }
+        try {
+            Add-MpPreference -ExclusionPath $path -ErrorAction Stop
+            # Tamper Protection can accept the call and leave the list untouched, so the
+            # exclusion counts as applied only once Defender reads it back.
+            $confirmed = @((Get-MpPreference).ExclusionPath) |
+                Where-Object { $_.TrimEnd('\') -eq $path.TrimEnd('\') }
+            if (-not $confirmed) {
+                throw 'Defender did not report the path afterwards - add it by hand in Windows Security'
+            }
+            Write-Ok "$what added"
+            $changed++
+        }
+        catch {
+            Write-Warn2 "$what - $($_.Exception.Message)"
+            $failed.Add($what)
+        }
+    }
+}
 
 # ================================================================ Power
 Write-Step 'Power'
