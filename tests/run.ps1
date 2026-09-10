@@ -154,6 +154,27 @@ Test-Case 'Windows profile encodes the selected balanced privacy policy' {
     Assert-True (Test-Path (Join-Path $repo 'docs\pre-format.md')) 'pre-format checklist is missing'
 }
 
+Test-Case 'scanner exclusions are declared by key and resolve through the layout' {
+    $keys = @(Get-IdsFromReadme (Join-Path $repo 'windows\README.md') @('Scanner exclusions'))
+    Assert-True ($keys.Count -gt 0) 'no scanner exclusion rows were parsed'
+    Assert-True (@($keys | Group-Object | Where-Object Count -gt 1).Count -eq 0) `
+        "duplicate exclusion keys: $($keys -join ', ')"
+    foreach ($key in $keys) {
+        Assert-True ($key -match '^(layout|home):.+') "exclusion key has no known prefix: $key"
+        # Throws when LAYOUT.md has no such row, which is the assertion: a renamed layout key
+        # must break the suite rather than silently exclude nothing on the next restore.
+        if ($key -match '^layout:(.+)$') { Get-LayoutPath $Matches[1] | Out-Null }
+    }
+
+    $source = Get-Content (Join-Path $repo 'windows\install.ps1') -Raw
+    Assert-True $source.Contains('Add-MpPreference -ExclusionPath') 'declared exclusions are never applied'
+    Assert-True $source.Contains("Get-IdsFromReadme `"`$PSScriptRoot\README.md`" @('Scanner exclusions')") `
+        'the installer does not read the declared exclusion table'
+    Assert-True (-not $source.Contains('ExclusionProcess')) 'process exclusions are not part of the profile'
+    Assert-True (-not $source.Contains('DisableRealtimeMonitoring')) 'the profile must not disable real-time protection'
+    Assert-True (-not ($source -match "ExclusionPath (?:'|`")?[A-Za-z]:\\")) 'an exclusion path is hardcoded instead of declared'
+}
+
 Test-Case 'MCP placeholders all have a declared value source' {
     $manifestPath = Join-Path $repo 'claude\mcp.template.json'
     $manifestText = Get-Content $manifestPath -Raw

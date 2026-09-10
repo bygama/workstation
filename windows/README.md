@@ -8,7 +8,7 @@ than application configuration.
 | `usb.md` | Optional recovery-media fallback when Windows recovery cannot be used |
 | `bootstrap.ps1` | PowerShell 5.1 fallback for missing winget, PowerShell 7, and Developer Mode |
 | `audit.ps1` | Read-only before/after process, service, startup, AppX, and policy report |
-| `install.ps1` | User UI/privacy settings and power-plan configuration |
+| `install.ps1` | User UI/privacy settings, scanner exclusions, and power-plan configuration |
 | `debloat.ps1` | Explicit removal of selected inbox applications |
 
 ## Reinstall from the PC
@@ -84,7 +84,8 @@ Start-Process pwsh -Verb RunAs -ArgumentList '-File windows\install.ps1'
 The script applies current-user Explorer/taskbar preferences, the classic Windows 10
 right-click menu, and the day/month/year regional date format, sets Windows diagnostic
 data to the minimum supported by Pro, disables the selected diagnostic services and scheduled
-tasks, removes consumer surfaces, leaves Edge installed but idle, and uses the built-in
+tasks, removes consumer surfaces, leaves Edge installed but idle, excludes the declared development
+roots from Defender's real-time scanning (§ Scanner exclusions), and uses the built-in
 Balanced power scheme. AC standby and hibernation remain disabled for long development,
 Docker, and game sessions. Explorer restarts only after a real run.
 
@@ -98,6 +99,39 @@ does not block Microsoft hosts or damage those dependencies.
 
 Power command failures are collected and produce exit code 1. The dry run performs no
 registry, power, or Explorer changes.
+
+## Scanner exclusions
+
+Defender stays on and real-time protection stays on. What this removes is real-time scanning
+of the two development roots, because a single `npm install` writes tens of thousands of
+short-lived files and MsMpEng reads every one of them: on this machine it had accumulated
+fourteen hours of CPU time scanning `node_modules` churn across worktrees.
+
+| Key | Resolves to | Why |
+| --- | --- | --- |
+| `layout:repos` | the `repos` row of [`layout/LAYOUT.md`](../layout/LAYOUT.md) | Every clone, and every `node_modules` inside one |
+| `home:orca\workspaces` | `%USERPROFILE%\orca\workspaces` | Orca worktrees — one dependency tree per worktree, all transient |
+
+Keys rather than paths: `C:\Briar\repos` is written down once, in `layout/LAYOUT.md`, and a
+second copy here is a copy that drifts. A declared path does not have to exist yet —
+`orca\workspaces` appears the first time a worktree is created, and the exclusion has to be
+in place before it is.
+
+What it costs: code that lands in either root is not scanned as it is written, so a malicious
+dependency is caught when it executes outside the root, not when it unpacks inside it.
+Nothing else changes — cloud protection, behaviour monitoring, SmartScreen, and scheduled
+scans of the rest of the disk stay exactly as they were. Process exclusions are deliberately
+not part of the profile: `node.exe` is excluded nowhere, only these two trees.
+
+Applying and reading the list both need elevation, so an unelevated run reports every row as
+pending rather than guessing. Tamper Protection can also accept the call and leave the list
+unchanged; the installer reads each path back and fails the row when Defender does not
+report it, in which case add it by hand under Windows Security → Virus & threat protection →
+Manage settings → Exclusions.
+
+```powershell
+Get-MpPreference | Select-Object -ExpandProperty ExclusionPath   # elevated
+```
 
 ## Debloat
 
@@ -131,7 +165,9 @@ used while retaining the Microsoft infrastructure required by the workstation:
 - Phone Link, Cross Device, OneDrive, Widgets, Copilot, Microsoft 365 consumer applications,
   suggestions, news, weather, and web results in Start search go away.
 - Windows Update, Defender, Firewall, SmartScreen, Search, SysMain, Bluetooth, notifications,
-  printing to PDF, and Store servicing are not optimization targets.
+  printing to PDF, and Store servicing are not optimization targets. Defender keeps every
+  protection enabled; the declared development roots are narrowed out of real-time scanning
+  by path, and nothing else about it is touched — § Scanner exclusions.
 
 ## Startup applications
 
@@ -213,5 +249,6 @@ Framework packages, WebView2, Windows Security, the shell, codecs, and driver co
 are also protected by `debloat.ps1`; they are infrastructure rather than user-facing bloat.
 
 Keep these tables under their own headings: the parser treats every backticked first cell
-under `## Inbox apps` as an AppX removal target and every one under `## Win32 apps` as a
-winget uninstall target.
+under `## Inbox apps` as an AppX removal target, every one under `## Win32 apps` as a winget
+uninstall target, and every one under `## Scanner exclusions` as a path to exclude from
+Defender.
