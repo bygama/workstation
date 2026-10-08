@@ -236,7 +236,7 @@ foreach ($f in @(Get-ChildItem $hooksSrc -Filter *.ps1 -ErrorAction SilentlyCont
 # ---------------------------------------------------------------- skills
 Write-Step 'Skills (repo junctions)'
 $skillSources = @(
-    (Join-Path (Get-LayoutPath 'repos') 'mine\Agent-Engineering\skills'),
+    (Join-Path (Get-LayoutPath 'repos') 'pegasuz\agent-engineering\skills'),
     (Join-Path (Get-LayoutPath 'repos') 'mine\skills\skills')
 )
 $skillsDst = Join-Path $claudeHome 'skills'

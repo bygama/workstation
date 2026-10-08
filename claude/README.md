@@ -43,11 +43,13 @@ complete original file remains in the run backup.
 ## Skills and statusline
 
 User skills are junction links into the skill source repos —
-`repos\mine\Agent-Engineering\skills\` and `repos\mine\skills\skills\` — the installer
+`repos\pegasuz\agent-engineering\skills\` and `repos\mine\skills\skills\` — the installer
 creates one link per skill directory found there, so a skill added to either repo appears
 on the next run with no copy step. The statusline is the `hud` repo (`repos\mine\hud`),
-declared in `settings.json` as desired state; all three repos are cloned by `dev/repos`
-before this step can succeed on a clean machine.
+declared in `settings.json` as desired state. `skills` and `hud` are cloned by `dev/repos`;
+AE lives in the Pegasuz organisation and is cloned by the Pegasuz workspace
+(`pegasuzhq/workspace` cloned as `repos\pegasuz`, then its `./bootstrap.sh --group core`).
+All three must be in place before this step can succeed on a clean machine.
 
 `claude/CLAUDE.md` is CANONICAL here (MAT-110; `Agent-Engineering/global/` no
 longer exists). Edit it here, then re-run the installer to apply it to

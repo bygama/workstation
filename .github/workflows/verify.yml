@@ -24,7 +24,7 @@ jobs:
           path: repo
       - uses: actions/checkout@v4
         with:
-          repository: bygama/Agent-Engineering
+          repository: pegasuzhq/Agent-Engineering
           path: standard
       - uses: actions/setup-node@v4
         with:
