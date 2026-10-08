@@ -25,6 +25,6 @@ Rules that hold at every tier:
   handoff → in-review, terminal → completed.
 
 This ceremony belongs to the AE standard, source at
-[github.com/bygama/Agent-Engineering](https://github.com/bygama/Agent-Engineering)
+[github.com/pegasuzhq/Agent-Engineering](https://github.com/pegasuzhq/Agent-Engineering)
 — skills (`work-run`, `orchestrate`) plus the README's adoption guide.
 Without those skills installed, run it by hand.

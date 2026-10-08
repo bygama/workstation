@@ -1,7 +1,8 @@
 # Skills
 
 User skills come from the repos listed in `$skillSources` in `claude/install.ps1` —
-`repos\mine\Agent-Engineering\skills\` (the standard's tooling) and
+`repos\pegasuz\agent-engineering\skills\` (the standard's tooling, cloned by the Pegasuz
+workspace's bootstrap) and
 `repos\mine\skills\skills\` (the personal library) — junction-linked into
 `~/.claude/skills/`. This repo carries no skill content and no skill list — the link step
 is declarative over whatever those repos contain, one junction per skill name with the
