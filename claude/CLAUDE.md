@@ -37,3 +37,11 @@
 - Never run a long-lived process as a background shell in an agent session — blocks working→idle,
   dies with it. Dev servers: own Orca terminal tab (`orca terminal create --command "npm run dev"`);
   browsers: Orca's embedded one — other MCPs only for lacked capabilities, not a child.
+- Subagent seats run on the model their task needs, per AE `reference/runners.md`: Haiku 5.5
+  (`claude-haiku-5-5`) for bounded seats — rechecks of named findings, extraction, searches, web
+  lookups, an extra lens; Sonnet for review lenses and S/M work; Opus for design, synthesis and
+  high-risk review; Fable only when the owner says so in words. Always pass `model`.
+- A subagent (Agent tool) does not end when it reports: it stays listed as an idle agent under this
+  terminal until stopped. Stop every reviewer/helper seat with TaskStop as soon as its result is
+  recorded; keep one alive only while a follow-up message to it is coming. Check with ListAgents
+  before ending a turn — zero teammates is the resting state.
